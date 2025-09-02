@@ -1,3 +1,7 @@
+import axios from "axios";
+
+import { URL_ETHOL } from "../utils/url.js";
+import fs from "fs";
 class Presensi {
   constructor() {}
 
@@ -23,7 +27,16 @@ class Presensi {
         "Sec-Fetch-Dest": "empty",
       },
     });
+    console.log(res.data);
     return res.data;
+  };
+
+  jedaWaktu = (start, end) => {
+    const startTime = new Date(`1970-01-01T${start}:00`);
+    const endTime = new Date(`1970-01-01T${end}:00`);
+    const diffMs = endTime - startTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    return diffMins;
   };
 }
 export { Presensi };

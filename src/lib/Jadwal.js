@@ -107,4 +107,14 @@ export class Jadwal {
 
     return merged;
   };
+  getJadwalJson = async () => {
+    const data = await fs.promises.readFile(this.filename, "utf-8");
+    const jadwal = JSON.parse(data);
+    try {
+      return jadwal;
+    } catch (parseErr) {
+      console.error("Gagal parsing file jadwal:", parseErr);
+      return [];
+    }
+  };
 }

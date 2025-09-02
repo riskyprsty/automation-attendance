@@ -4,3 +4,6 @@ let Waktu =
   new Date().toDateString() +
   " " +
   new Date().toLocaleTimeString("id-ID", { hour12: false });
+
+console.log(`🕒 ${Waktu}`);
+console.log(`📅 Tahun: ${Tahun}, Hari: ${Hari}`);

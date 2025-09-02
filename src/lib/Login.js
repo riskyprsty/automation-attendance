@@ -12,6 +12,10 @@ export class Login {
     this.token = null;
     this.ST = null;
     this.PHPSESSID = null;
+    this.hakAktif = null;
+    this.nrp = null;
+    this.nama = null;
+    this.nomorMhs = null;
   }
 
   #getPHPSESSID = async () => {
@@ -199,7 +203,14 @@ export class Login {
         },
       });
       if (res.status === 200) {
-        console.log(res.data);
+        {
+          console.log(res.data);
+          this.hakAktif = res.data.hakAkses[0];
+          this.nrp = res.data.nipnrp;
+          this.nama = res.data.nama;
+          this.nomorMhs = res.data.nomor;
+        }
+
         console.log("✅ Token valid");
         return true;
       }
@@ -208,7 +219,7 @@ export class Login {
       return false;
     }
   };
-  login = async () => {
+  getAuth = async () => {
     try {
       if (!(await this.#getPHPSESSID()))
         throw new Error("Gagal mendapatkan PHPSESSID");

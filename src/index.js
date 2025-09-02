@@ -1,21 +1,84 @@
-import { Login } from "./lib/Login.js";
 import { Jadwal } from "./lib/Jadwal.js";
+import { Login } from "./lib/Login.js";
+import { Presensi } from "./lib/Presensi.js";
 
-(async () => {
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function main() {
   const login = new Login();
-  const session = await login.login();
-  const jadwal = new Jadwal();
-  let Tahun = new Date().getFullYear();
-  let Hari = new Date().getDay();
-  let Waktu =
-    new Date().toDateString() +
-    " " +
-    new Date().toLocaleTimeString("id-ID", { hour12: false });
-  if (session) {
-    const mergedData = await jadwal.mergeJadwal(session.ST, session.token);
-    console.log(mergedData);
-    while (true) {
-      // Do something
-    }
+  const isLogin = await login.getAuth();
+  if (!isLogin) {
+    console.log("Login...");
+    await login.getAuth();
   }
-})();
+  const jadwal = new Jadwal();
+  const presensi = new Presensi();
+  console.log("Mengambil data jadwal...");
+  let dataJadwal = await jadwal.mergeJadwal(login.ST, login.token);
+  if (!dataJadwal || dataJadwal.length === 0) {
+    console.log("Gagal mendapatkan data jadwal.");
+    console.log("Mengambil jadwal dari file...");
+    await jadwal.mergeJadwal();
+    dataJadwal = await jadwal.mergeJadwal(login.ST, login.token);
+    return;
+  }
+
+  while (true) {
+    const hariIni = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jum'at",
+      "Sabtu",
+    ][new Date().getDay()];
+    // const sekarang = new Date()
+    //   .toLocaleTimeString("id-ID", {
+    //     hour: "2-digit",
+    //     minute: "2-digit",
+    //     hour12: false,
+    //   })
+    //   .replace(".", ":");
+    const sekarang = "09:00";
+    console.log(`Hari ini: ${hariIni}, Jam: ${sekarang}`);
+    console.log("Mencari jadwal yang sesuai...");
+
+    const jadwalData = await jadwal.getJadwalJson();
+    console.log(jadwalData);
+    let jadwalSekarang = null;
+    if (Array.isArray(jadwalData)) {
+      jadwalSekarang = jadwalData.find(
+        (j) =>
+          j.hari === hariIni &&
+          j.jamMulai &&
+          j.jamSelesai &&
+          sekarang >= j.jamMulai &&
+          sekarang <= j.jamSelesai
+      );
+    } else {
+      console.log("Data jadwal kosong atau tidak valid:", jadwalData);
+    }
+
+    if (jadwalSekarang) {
+      console.log("Jadwal kuliah ditemukan:", jadwalSekarang);
+      console.log("Jadwal ditemukan:", jadwalSekarang.matakuliah.nama);
+      console.log("Melakukan pengecekan presensi...");
+      const infoPresensi = await presensi.lastKulliah(
+        login.ST,
+        login.token,
+        jadwalSekarang.nomor,
+        jadwalSekarang.matakuliah.jenisSchemaMk
+      );
+      console.log("Info Presensi:", infoPresensi);
+    } else {
+      console.log("Tidak ada jadwal kuliah saat ini.");
+    }
+    console.log("Menunggu 5 menit sebelum pengecekan berikutnya...");
+    await delay(5 * 60 * 1000);
+  }
+}
+
+main();
