@@ -8,26 +8,11 @@ function delay(ms) {
 
 async function withTokenRefresh(login, apiCall) {
   try {
-    const result = await apiCall();
-    if (
-      result &&
-      result.sukses === false &&
-      result.pesan &&
-      result.pesan.includes("Token tidak valid")
-    ) {
-      console.log("Token expired, refreshing...");
-      await login.getAuth();
-      return await apiCall();
-    }
-
-    return result;
+    return await apiCall();
   } catch (error) {
     if (
       error.response?.data?.pesan?.includes("Token tidak valid") ||
-      error.response?.status === 401 ||
-      (error.response?.data &&
-        error.response.data.sukses === false &&
-        error.response.data.pesan?.includes("Token tidak valid"))
+      error.response?.status === false
     ) {
       console.log("Token expired, refreshing...");
       await login.getAuth();
@@ -56,6 +41,107 @@ async function main() {
     return;
   }
 
+  function calculateOptimalDelay(jadwalData) {
+    const now = new Date();
+    const currentDay = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jum'at",
+      "Sabtu",
+    ][now.getDay()];
+    const currentTime = now
+      .toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      .replace(".", ":");
+
+    const todaySchedules = jadwalData.filter(
+      (j) => j.hari === currentDay && j.jamMulai && j.jamSelesai
+    );
+    const upcomingToday = todaySchedules.filter(
+      (j) => currentTime < j.jamMulai
+    );
+
+    if (upcomingToday.length > 0) {
+      const nextSchedule = upcomingToday.sort((a, b) =>
+        a.jamMulai.localeCompare(b.jamMulai)
+      )[0];
+      const [nextHour, nextMinute] = nextSchedule.jamMulai
+        .split(":")
+        .map(Number);
+      const [currentHour, currentMinute] = currentTime.split(":").map(Number);
+
+      const nextTime = new Date(now);
+      nextTime.setHours(nextHour, nextMinute, 0, 0);
+
+      const timeDiff = nextTime - now;
+      console.log(
+        `Jadwal selanjutnya: ${nextSchedule.matakuliah.nama} pada ${nextSchedule.jamMulai}`
+      );
+      console.log(
+        `Menunggu ${Math.round(
+          timeDiff / 60000
+        )} menit hingga jadwal dimulai...`
+      );
+
+      return Math.max(timeDiff - 5 * 60 * 1000, 60000); // minimal 1 menit
+    }
+
+    const daysOrder = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jum'at",
+      "Sabtu",
+    ];
+    const currentDayIndex = daysOrder.indexOf(currentDay);
+
+    for (let i = 1; i <= 7; i++) {
+      const nextDayIndex = (currentDayIndex + i) % 7;
+      const nextDay = daysOrder[nextDayIndex];
+      const nextDaySchedules = jadwalData.filter(
+        (j) => j.hari === nextDay && j.jamMulai
+      );
+
+      if (nextDaySchedules.length > 0) {
+        const earliestSchedule = nextDaySchedules.sort((a, b) =>
+          a.jamMulai.localeCompare(b.jamMulai)
+        )[0];
+        console.log(
+          `Jadwal selanjutnya: ${earliestSchedule.matakuliah.nama} pada ${nextDay} ${earliestSchedule.jamMulai}`
+        );
+
+        const nextDate = new Date(now);
+        nextDate.setDate(now.getDate() + i);
+        const [scheduleHour, scheduleMinute] = earliestSchedule.jamMulai
+          .split(":")
+          .map(Number);
+        nextDate.setHours(scheduleHour, scheduleMinute, 0, 0);
+
+        const timeDiff = nextDate - now;
+        console.log(
+          `Menunggu ${Math.round(
+            timeDiff / 3600000
+          )} jam hingga jadwal berikutnya...`
+        );
+
+        return Math.min(timeDiff - 5 * 60 * 1000, 6 * 60 * 60 * 1000);
+      }
+    }
+
+    console.log(
+      "Tidak ada jadwal dalam 7 hari ke depan. Cek lagi dalam 1 jam..."
+    );
+    return 60 * 60 * 1000; // 1 jam
+  }
+
   while (true) {
     const hariIni = [
       "Minggu",
@@ -73,11 +159,11 @@ async function main() {
         hour12: false,
       })
       .replace(".", ":");
+    // const sekarang = "10:00"; // TESTING
     console.log(`Hari ini: ${hariIni}, Jam: ${sekarang}`);
     console.log("Mencari jadwal yang sesuai...");
 
     const jadwalData = await jadwal.getJadwalJson();
-    // console.log(jadwalData);
     let jadwalSekarang = null;
     if (Array.isArray(jadwalData)) {
       jadwalSekarang = jadwalData.find(
@@ -159,12 +245,19 @@ async function main() {
       } else {
         console.log("Presensi belum dibuka.");
       }
+
+      // Ketika ada jadwal aktif, cek lagi dalam 15 menit
+      console.log("Menunggu 15 menit untuk pengecekan berikutnya...");
+      await delay(15 * 60 * 1000);
     } else {
       console.log("Tidak ada jadwal kuliah saat ini.");
+
+      const optimalDelay = calculateOptimalDelay(jadwalData);
+      await delay(optimalDelay);
     }
-    console.log("Menunggu 20 menit sebelum pengecekan berikutnya...");
-    await delay(20 * 60 * 1000);
   }
 }
 
-main();
+main().catch((err) => {
+  console.error("Error di main:", err);
+});
