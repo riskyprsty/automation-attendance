@@ -6,6 +6,37 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function withTokenRefresh(login, apiCall) {
+  try {
+    const result = await apiCall();
+    if (
+      result &&
+      result.sukses === false &&
+      result.pesan &&
+      result.pesan.includes("Token tidak valid")
+    ) {
+      console.log("Token expired, refreshing...");
+      await login.getAuth();
+      return await apiCall();
+    }
+
+    return result;
+  } catch (error) {
+    if (
+      error.response?.data?.pesan?.includes("Token tidak valid") ||
+      error.response?.status === 401 ||
+      (error.response?.data &&
+        error.response.data.sukses === false &&
+        error.response.data.pesan?.includes("Token tidak valid"))
+    ) {
+      console.log("Token expired, refreshing...");
+      await login.getAuth();
+      return await apiCall();
+    }
+    throw error;
+  }
+}
+
 async function main() {
   const login = new Login();
   const isLogin = await login.getAuth();
@@ -35,19 +66,19 @@ async function main() {
       "Jum'at",
       "Sabtu",
     ][new Date().getDay()];
-    const sekarang = new Date()
-      .toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-      .replace(".", ":");
-    // const sekarang = "10:00";
+    // const sekarang = new Date()
+    //   .toLocaleTimeString("id-ID", {
+    //     hour: "2-digit",
+    //     minute: "2-digit",
+    //     hour12: false,
+    //   })
+    //   .replace(".", ":");
+    const sekarang = "10:00";
     console.log(`Hari ini: ${hariIni}, Jam: ${sekarang}`);
     console.log("Mencari jadwal yang sesuai...");
 
     const jadwalData = await jadwal.getJadwalJson();
-    console.log(jadwalData);
+    // console.log(jadwalData);
     let jadwalSekarang = null;
     if (Array.isArray(jadwalData)) {
       jadwalSekarang = jadwalData.find(
@@ -66,44 +97,54 @@ async function main() {
       console.log("Jadwal kuliah ditemukan:", jadwalSekarang);
       console.log("Jadwal ditemukan:", jadwalSekarang.matakuliah.nama);
       console.log("Melakukan pengecekan presensi...");
-      const infoPresensi = await presensi.lastKulliah(
-        login.ST,
-        login.token,
-        jadwalSekarang.nomor,
-        jadwalSekarang.matakuliah.jenisSchemaMk
+      const infoPresensi = await withTokenRefresh(login, () =>
+        presensi.lastKulliah(
+          login.ST,
+          login.token,
+          jadwalSekarang.nomor,
+          jadwalSekarang.matakuliah.jenisSchemaMk
+        )
       );
       console.log("Info Presensi:", infoPresensi);
       if (infoPresensi.open == true) {
         console.log("Presensi dibuka, silakan lakukan presensi.");
-        const notifikasi = await presensi.getNotifikasi(login.ST, login.token);
+        const notifikasi = await withTokenRefresh(login, () =>
+          presensi.getNotifikasi(login.ST, login.token)
+        );
         const dataTerkaitCheck = `${jadwalSekarang.nomor}-${jadwalSekarang.matakuliah.jenisSchemaMk}`;
         const checkPresensi = notifikasi.find(
           (n) => n.status == "1" && n.dataTerkait == dataTerkaitCheck
         );
         if (checkPresensi) {
-          const checkRiwayatPresensi = await presensi.getRiwayatPresensi(
-            login.ST,
-            login.token,
-            jadwalSekarang.nomor,
-            jadwalSekarang.matakuliah.jenisSchemaMk,
-            login.nomorMhs
+          const checkRiwayatPresensi = await withTokenRefresh(login, () =>
+            presensi.getRiwayatPresensi(
+              login.ST,
+              login.token,
+              jadwalSekarang.nomor,
+              jadwalSekarang.matakuliah.jenisSchemaMk,
+              login.nomorMhs
+            )
           );
           console.log("Riwayat Presensi:", checkRiwayatPresensi);
           const keyPresensi = checkRiwayatPresensi.find(
             (r) =>
-              r.tanggal.split(" ")[0] === new Date().toISOString().split("T")[0]
+              r.tanggal.split(" ")[0] ===
+                new Date().toISOString().split("T")[0] &&
+              r.key === infoPresensi.key
           );
           if (!keyPresensi) {
             console.log("Belum melakukan presensi hari ini.");
             console.log("Melakukan presensi...");
-            const push = await presensi.sumbitPresensi(
-              login.ST,
-              login.token,
-              jadwalSekarang.nomor,
-              login.nomorMhs,
-              jadwalSekarang.matakuliah.jenisSchemaMk,
-              jadwalSekarang.kuliah_asal,
-              infoPresensi.key
+            const push = await withTokenRefresh(login, () =>
+              presensi.sumbitPresensi(
+                login.ST,
+                login.token,
+                jadwalSekarang.nomor,
+                login.nomorMhs,
+                jadwalSekarang.matakuliah.jenisSchemaMk,
+                jadwalSekarang.kuliah_asal,
+                infoPresensi.key
+              )
             );
             if (push.status === "success") {
               console.log("Presensi berhasil:", push.message);
@@ -123,7 +164,7 @@ async function main() {
       console.log("Tidak ada jadwal kuliah saat ini.");
     }
     console.log("Menunggu 5 menit sebelum pengecekan berikutnya...");
-    await delay(5 * 60 * 1000);
+    await delay(1 * 30 * 100);
   }
 }
 
