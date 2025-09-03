@@ -66,14 +66,13 @@ async function main() {
       "Jum'at",
       "Sabtu",
     ][new Date().getDay()];
-    // const sekarang = new Date()
-    //   .toLocaleTimeString("id-ID", {
-    //     hour: "2-digit",
-    //     minute: "2-digit",
-    //     hour12: false,
-    //   })
-    //   .replace(".", ":");
-    const sekarang = "10:00";
+    const sekarang = new Date()
+      .toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      .replace(".", ":");
     console.log(`Hari ini: ${hariIni}, Jam: ${sekarang}`);
     console.log("Mencari jadwal yang sesuai...");
 
