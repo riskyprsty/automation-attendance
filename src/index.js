@@ -163,8 +163,8 @@ async function main() {
     } else {
       console.log("Tidak ada jadwal kuliah saat ini.");
     }
-    console.log("Menunggu 5 menit sebelum pengecekan berikutnya...");
-    await delay(1 * 30 * 100);
+    console.log("Menunggu 20 menit sebelum pengecekan berikutnya...");
+    await delay(20 * 60 * 1000);
   }
 }
 
