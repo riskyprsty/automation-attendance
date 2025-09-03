@@ -7,6 +7,7 @@ class Presensi {
     this.key = null;
     this.kuliah = null;
     this.jenisSchema = null;
+    this.hakAktif = "mahasiswa";
   }
 
   lastKulliah = async (ST, Token, nomor_kuliah, jenisSchema) => {
@@ -111,10 +112,46 @@ class Presensi {
         "Sec-Fetch-Dest": "empty",
       },
     });
-    console.log(res.data);
+    // console.log(res.data);
     return res.data;
   };
-}
-export { Presensi };
 
-test();
+  getRiwayatPresensi = async (
+    ST,
+    Token,
+    nomor_kuliah,
+    jenis_schema,
+    nomor_mhs
+  ) => {
+    try {
+      const res = await axios.get(`${URL_ETHOL}/api/presensi/riwayat`, {
+        params: {
+          kuliah: nomor_kuliah,
+          jenis_schema: jenis_schema,
+          nomor: nomor_mhs,
+        },
+        headers: {
+          Cookie: `PHPSESSID=${ST}; token=${Token}; hakAktif=${this.hakAktif}`,
+          "Sec-Ch-Ua-Platform": '"Linux"',
+          "User-Agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+          Accept: "application/json, text/plain, */*",
+          Dnt: 1,
+          "Sec-Ch-Ua":
+            '"Not A(Brand";v="8", "Chromium";v="132", "Google Chrome";v="132"',
+          "Sec-Ch-Ua-Mobile": "?0",
+          Token: Token,
+          "Sec-Fetch-Site": "same-origin",
+          "Sec-Fetch-Mode": "cors",
+          "Sec-Fetch-Dest": "empty",
+        },
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching riwayat presensi:", error);
+      return { status: "error", message: "Gagal mengambil riwayat presensi" };
+    }
+  };
+}
+
+export { Presensi };

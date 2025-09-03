@@ -72,34 +72,52 @@ async function main() {
         jadwalSekarang.nomor,
         jadwalSekarang.matakuliah.jenisSchemaMk
       );
-      // console.log("Info Presensi:", infoPresensi);
+      console.log("Info Presensi:", infoPresensi);
       if (infoPresensi.open == true) {
         console.log("Presensi dibuka, silakan lakukan presensi.");
         const notifikasi = await presensi.getNotifikasi(login.ST, login.token);
         const dataTerkaitCheck = `${jadwalSekarang.nomor}-${jadwalSekarang.matakuliah.jenisSchemaMk}`;
-        const letsgo = notifikasi.find(
+        const checkPresensi = notifikasi.find(
           (n) => n.status == "1" && n.dataTerkait == dataTerkaitCheck
         );
-        if (letsgo) {
-          console.log("Notifikasi presensi ditemukan:", letsgo);
-
-          // const push = await presensi.sumbitPresensi(
-          //   login.ST,
-          //   login.token,
-          //   jadwalSekarang.nomor,
-          //   login.nomorMhs,
-          //   jadwalSekarang.matakuliah.jenisSchemaMk,
-          //   jadwalSekarang.kuliah_asal,
-          //   infoPresensi.key
-          // );
-          // if (push.status === "success") {
-          //   console.log("Presensi berhasil:", push.message);
-          // } else {
-          //   console.log("Gagal presensi:", push.message);
-          // }
+        if (checkPresensi) {
+          const checkRiwayatPresensi = await presensi.getRiwayatPresensi(
+            login.ST,
+            login.token,
+            jadwalSekarang.nomor,
+            jadwalSekarang.matakuliah.jenisSchemaMk,
+            login.nomorMhs
+          );
+          console.log("Riwayat Presensi:", checkRiwayatPresensi);
+          const keyPresensi = checkRiwayatPresensi.find(
+            (r) =>
+              r.tanggal.split(" ")[0] === new Date().toISOString().split("T")[0]
+          );
+          if (!keyPresensi) {
+            console.log("Belum melakukan presensi hari ini.");
+            console.log("Melakukan presensi...");
+            const push = await presensi.sumbitPresensi(
+              login.ST,
+              login.token,
+              jadwalSekarang.nomor,
+              login.nomorMhs,
+              jadwalSekarang.matakuliah.jenisSchemaMk,
+              jadwalSekarang.kuliah_asal,
+              infoPresensi.key
+            );
+            if (push.status === "success") {
+              console.log("Presensi berhasil:", push.message);
+            } else {
+              console.log("Gagal presensi:", push.message);
+            }
+          } else {
+            console.log("Sudah melakukan presensi hari ini:", keyPresensi);
+          }
         } else {
           console.log("Tidak ada notifikasi presensi yang sesuai.");
         }
+      } else {
+        console.log("Presensi belum dibuka.");
       }
     } else {
       console.log("Tidak ada jadwal kuliah saat ini.");

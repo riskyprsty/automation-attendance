@@ -7,3 +7,5 @@ let Waktu =
 
 console.log(`🕒 ${Waktu}`);
 console.log(`📅 Tahun: ${Tahun}, Hari: ${Hari}`);
+console.log("===================================");
+console.log(new Date().toISOString());
