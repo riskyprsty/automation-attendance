@@ -236,6 +236,7 @@ async function main() {
               console.log("Presensi berhasil:", push.message);
               const optimalDelay = calculateOptimalDelay(jadwalData);
               await delay(optimalDelay);
+              continue;
             } else {
               console.log("Gagal presensi:", push.message);
             }
