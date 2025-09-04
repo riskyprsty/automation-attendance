@@ -234,6 +234,8 @@ async function main() {
             );
             if (push.sukses === true) {
               console.log("Presensi berhasil:", push.message);
+              const optimalDelay = calculateOptimalDelay(jadwalData);
+              await delay(optimalDelay);
             } else {
               console.log("Gagal presensi:", push.message);
             }
@@ -246,8 +248,6 @@ async function main() {
       } else {
         console.log("Presensi belum dibuka.");
       }
-
-      // Ketika ada jadwal aktif, cek lagi dalam 15 menit
       console.log("Menunggu 15 menit untuk pengecekan berikutnya...");
       await delay(15 * 60 * 1000);
     } else {
