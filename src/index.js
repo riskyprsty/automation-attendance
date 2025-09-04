@@ -211,13 +211,14 @@ async function main() {
             )
           );
           console.log("Riwayat Presensi:", checkRiwayatPresensi);
-          const keyPresensi = checkRiwayatPresensi.find(
-            (r) =>
-              r.tanggal.split(" ")[0] ===
-                new Date().toISOString().split("T")[0] &&
-              r.key === infoPresensi.key
-          );
-          if (!keyPresensi) {
+          const today = new Date().toISOString().split("T")[0];
+          const keyPresensi = checkRiwayatPresensi.find((r) => {
+            const [dd, mm, yyyy] = r.tanggal.split(" ")[0].split("-");
+            const tanggalRiwayat = `${yyyy}-${mm}-${dd}`;
+            return tanggalRiwayat === today && r.key === infoPresensi.key;
+          });
+          console.log("Cek Presensi hari ini:", keyPresensi);
+          if (!keyPresensi || keyPresensi === undefined) {
             console.log("Belum melakukan presensi hari ini.");
             console.log("Melakukan presensi...");
             const push = await withTokenRefresh(login, () =>
@@ -231,7 +232,7 @@ async function main() {
                 infoPresensi.key
               )
             );
-            if (push.status === "success") {
+            if (push.sukses === true) {
               console.log("Presensi berhasil:", push.message);
             } else {
               console.log("Gagal presensi:", push.message);
