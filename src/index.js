@@ -232,7 +232,7 @@ async function main() {
                 infoPresensi.key
               )
             );
-            if (push.sukses === true) {
+            if (push.message.sukses === true) {
               console.log("Presensi berhasil:", push.message);
               const optimalDelay = calculateOptimalDelay(jadwalData);
               await delay(optimalDelay);
@@ -242,9 +242,17 @@ async function main() {
             }
           } else {
             console.log("Sudah melakukan presensi hari ini:", keyPresensi);
+            console.log("Presensi berhasil:", push.message);
+            const optimalDelay = calculateOptimalDelay(jadwalData);
+            await delay(optimalDelay);
+            continue;
           }
         } else {
           console.log("Tidak ada notifikasi presensi yang sesuai.");
+          console.log("Presensi berhasil:", push.message);
+          const optimalDelay = calculateOptimalDelay(jadwalData);
+          await delay(optimalDelay);
+          continue;
         }
       } else {
         console.log("Presensi belum dibuka.");
