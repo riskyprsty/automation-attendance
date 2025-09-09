@@ -258,7 +258,7 @@ async function main() {
         console.log("Presensi belum dibuka.");
       }
       console.log("Menunggu 15 menit untuk pengecekan berikutnya...");
-      await delay(15 * 60 * 1000);
+      await delay(3 * 60 * 1000);
     } else {
       console.log("Tidak ada jadwal kuliah saat ini.");
 
