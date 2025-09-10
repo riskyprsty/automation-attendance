@@ -232,12 +232,13 @@ async function main() {
                 infoPresensi.key
               )
             );
-            if (push.message.sukses === true) {
+            if (push.sukses == true) {
               console.log("Presensi berhasil:", push.message);
               const optimalDelay = calculateOptimalDelay(jadwalData);
               await delay(optimalDelay);
               continue;
             } else {
+              console.log(JSON.stringify(push)
               console.log("Gagal presensi:", push.message);
             }
           } else {
