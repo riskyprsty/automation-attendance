@@ -242,14 +242,12 @@ async function main() {
             }
           } else {
             console.log("Sudah melakukan presensi hari ini:", keyPresensi);
-            console.log("Presensi berhasil:", push.message);
             const optimalDelay = calculateOptimalDelay(jadwalData);
             await delay(optimalDelay);
             continue;
           }
         } else {
           console.log("Tidak ada notifikasi presensi yang sesuai.");
-          console.log("Presensi berhasil:", push.message);
           const optimalDelay = calculateOptimalDelay(jadwalData);
           await delay(optimalDelay);
           continue;
