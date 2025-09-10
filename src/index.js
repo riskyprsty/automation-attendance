@@ -238,7 +238,7 @@ async function main() {
               await delay(optimalDelay);
               continue;
             } else {
-              console.log(JSON.stringify(push)
+              console.log(JSON.stringify(push))
               console.log("Gagal presensi:", push.message);
             }
           } else {
