@@ -198,7 +198,7 @@ async function main() {
         );
         const dataTerkaitCheck = `${jadwalSekarang.nomor}-${jadwalSekarang.matakuliah.jenisSchemaMk}`;
         const checkPresensi = notifikasi.find(
-          (n) => n.status == "1" && n.dataTerkait == dataTerkaitCheck
+          (n) => n.dataTerkait == dataTerkaitCheck
         );
         if (checkPresensi) {
           const checkRiwayatPresensi = await withTokenRefresh(login, () =>
@@ -238,7 +238,7 @@ async function main() {
               await delay(optimalDelay);
               continue;
             } else {
-              console.log(JSON.stringify(push))
+              console.log(JSON.stringify(push));
               console.log("Gagal presensi:", push.message);
             }
           } else {
@@ -249,14 +249,11 @@ async function main() {
           }
         } else {
           console.log("Tidak ada notifikasi presensi yang sesuai.");
-          const optimalDelay = calculateOptimalDelay(jadwalData);
-          await delay(optimalDelay);
-          continue;
         }
       } else {
         console.log("Presensi belum dibuka.");
       }
-      console.log("Menunggu 15 menit untuk pengecekan berikutnya...");
+      console.log("Menunggu 3 menit untuk pengecekan berikutnya...");
       await delay(3 * 60 * 1000);
     } else {
       console.log("Tidak ada jadwal kuliah saat ini.");

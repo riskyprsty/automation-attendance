@@ -81,7 +81,7 @@ class Presensi {
         },
       }
     );
-    console.log(res.data);
+    console.log("Response Presensi:", res.data);
     if (
       res.data.status == true &&
       res.data.pesan === "Presensi berhasil disimpan"
