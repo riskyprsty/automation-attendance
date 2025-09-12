@@ -64,7 +64,7 @@ async function main() {
       (j) => j.hari === currentDay && j.jamMulai && j.jamSelesai
     );
     const upcomingToday = todaySchedules.filter(
-      (j) => currentTime < j.jamMulai
+      (j) => currentTime <= j.jamMulai
     );
 
     if (upcomingToday.length > 0) {
