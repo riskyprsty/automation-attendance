@@ -83,7 +83,7 @@ class Presensi {
     );
     console.log("Response Presensi:", res.data);
     if (
-      res.data.status == true &&
+      res.data.sukses == true &&
       res.data.pesan === "Presensi berhasil disimpan"
     ) {
       return res.data;
