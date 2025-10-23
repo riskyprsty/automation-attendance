@@ -166,10 +166,10 @@ async function tryAbsenForClass() {
       `🕒 ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}`,
       `📘 Mata Kuliah: *${matkul.matakuliah.nama}*`,
       `🎯 Token: \`${infoPresensi.key}\``,
-      `👨‍🎓 NRP: ${state.login.nomorMhs}`,
+      `👨‍🎓 ${state.login.nama} - ${state.login.nomorMhs}`,
     ].join("\n");
 
-    await sendNotif(msg);
+    await sendNotification(msg);
 
     return { done: true, reason: "submitted" };
   }
