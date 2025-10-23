@@ -3,6 +3,7 @@ import process from "node:process";
 import { Jadwal } from "./lib/Jadwal.js";
 import { Login } from "./lib/Login.js";
 import { Presensi } from "./lib/Presensi.js";
+import { sendNotification } from "./utils/notification.js";
 import axios from "axios";
 
 const TZ = "Asia/Jakarta";
@@ -159,8 +160,20 @@ async function tryAbsenForClass() {
 
   if (push?.sukses) {
     console.log("[PRESENSI] Berhasil:", push);
+
+    const msg = [
+      "✅ *Presensi Berhasil!*",
+      `🕒 ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}`,
+      `📘 Mata Kuliah: *${matkul.matakuliah.nama}*`,
+      `🎯 Token: \`${infoPresensi.key}\``,
+      `👨‍🎓 NRP: ${state.login.nomorMhs}`,
+    ].join("\n");
+
+    await sendNotif(msg);
+
     return { done: true, reason: "submitted" };
-  } else {
+  }
+  else {
     console.log("[PRESENSI] Gagal submit:", push);
     return { done: false, reason: "submit_failed" };
   }
@@ -232,7 +245,7 @@ function stopHighFreq() {
   try {
     state.highFreqJob?.stop();
     state.highFreqJob?.destroy?.();
-  } catch {}
+  } catch { }
   state.highFreqJob = null;
   state.highFreqEnabled = false;
   console.log("[SCHED] High-frequency OFF.");
@@ -256,7 +269,7 @@ function shutdown() {
   console.log("\n[APP] Shutting down...");
   try {
     normalJob.stop();
-  } catch {}
+  } catch { }
   stopHighFreq();
   process.exit(0);
 }
