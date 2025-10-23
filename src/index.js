@@ -175,6 +175,7 @@ async function tryAbsenForClass() {
   }
   else {
     console.log("[PRESENSI] Gagal submit:", push);
+    await sendNotification(`❌ *Presensi Gagal*\nMata Kuliah: *${matkul.matakuliah.nama}*`);
     return { done: false, reason: "submit_failed" };
   }
 }
